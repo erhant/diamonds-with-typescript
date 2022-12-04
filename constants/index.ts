@@ -1,7 +1,5 @@
-import {BigNumber} from 'ethers';
-
 const contractConstants = {
-  FacetNames: ['DiamondLoupeFacet', 'OwnershipFacet'],
+  FacetNames: ['DiamondLoupeFacet', 'OwnershipFacet', 'FoobarFacet', 'Test2Facet'],
 };
 
 export default contractConstants as Readonly<typeof contractConstants>;

@@ -1,65 +1,79 @@
 import {ethers} from 'hardhat';
-import {getSelectors, FacetCutAction} from '../libraries/diamond';
+import {FacetCutAction} from '../libraries/diamond';
 import constants from '../constants';
 import {IDiamondCut} from '../types/typechain';
+import {cutDiamond} from './Diamond.cut';
+
+export async function deployDiamond(ownerAddress: string, diamondCutFacetAddress: string): Promise<string> {
+  const factory = await ethers.getContractFactory('Diamond');
+  const contract = await factory.deploy(ownerAddress, diamondCutFacetAddress);
+  await contract.deployed();
+  return contract.address;
+}
+
+export async function deployDiamondCutFacet(): Promise<string> {
+  const factory = await ethers.getContractFactory('DiamondCutFacet');
+  const contract = await factory.deploy();
+  await contract.deployed();
+  return contract.address;
+}
+
+export async function deployDiamondInit(): Promise<string> {
+  const factory = await ethers.getContractFactory('DiamondInit');
+  const contract = await factory.deploy();
+  await contract.deployed();
+  return contract.address;
+}
+
+export async function deployFacet(facetName: string): Promise<IDiamondCut.FacetCutStruct> {
+  const factory = await ethers.getContractFactory(facetName);
+  const contract = await factory.deploy();
+  await contract.deployed();
+  // console.log(`${facetName} deployed: ${contract.address}`);
+  return {
+    facetAddress: contract.address,
+    action: FacetCutAction.Add,
+    functionSelectors: Object.keys(contract.interface.functions)
+      // ignore existing functions
+      .filter(f => f !== 'supportsInterface(bytes4)')
+      // map functions to function selectors
+      .map(f => contract.interface.getSighash(f)),
+  };
+}
 
 export default async function main(): Promise<string> {
-  const accounts = await ethers.getSigners();
-  const contractOwner = accounts[0];
+  const [owner] = await ethers.getSigners();
 
   // deploy DiamondCutFacet
-  const DiamondCutFacet = await ethers.getContractFactory('DiamondCutFacet');
-  const diamondCutFacet = await DiamondCutFacet.deploy();
-  await diamondCutFacet.deployed();
-  console.log('DiamondCutFacet deployed:', diamondCutFacet.address);
+  const diamondCutFacetAddress = await deployDiamondCutFacet();
+  console.log('DiamondCutFacet deployed:', diamondCutFacetAddress);
 
   // deploy Diamond
-  const Diamond = await ethers.getContractFactory('Diamond');
-  const diamond = await Diamond.deploy(contractOwner.address, diamondCutFacet.address);
-  await diamond.deployed();
-  console.log('Diamond deployed:', diamond.address);
+  const diamondAddress = await deployDiamond(owner.address, diamondCutFacetAddress);
+  console.log('Diamond deployed:', diamondAddress);
 
   // deploy DiamondInit
-  const DiamondInit = await ethers.getContractFactory('DiamondInit');
-  const diamondInit = await DiamondInit.deploy();
-  await diamondInit.deployed();
-  console.log('DiamondInit deployed:', diamondInit.address);
+  const diamondInitAddress = await deployDiamondInit();
+  console.log('DiamondInit deployed:', diamondInitAddress);
 
   // deploy facets
   console.log('Deploying facets');
   const facetCuts: IDiamondCut.FacetCutStruct[] = [];
-  for (const facetName of constants.FacetNames) {
-    const Facet = await ethers.getContractFactory(facetName);
-    const facet = await Facet.deploy();
-    await facet.deployed();
-    console.log(`${facetName} deployed: ${facet.address}`);
-    facetCuts.push({
-      facetAddress: facet.address,
-      action: FacetCutAction.Add,
-      functionSelectors: getSelectors(facet),
-    });
-  }
+  await Promise.all(
+    constants.FacetNames.map(async facetName => {
+      console.log('\t', facetName);
+      const facetCut = await deployFacet(facetName);
+      facetCuts.push(facetCut);
+    })
+  );
 
-  // upgrade diamond with facets
+  // upgrade diamond with facets & call init function
   console.log('\nDiamond Cuts:', facetCuts);
-  const diamondCut = await ethers.getContractAt('IDiamondCut', diamond.address);
+  cutDiamond(diamondAddress, diamondInitAddress, facetCuts);
 
-  // call to init function
-  let functionCall = diamondInit.interface.encodeFunctionData('init');
-  const tx = await diamondCut.diamondCut(facetCuts, diamondInit.address, functionCall);
-  const receipt = await tx.wait();
-  if (!receipt.status) {
-    throw Error(`Diamond upgrade failed: ${tx.hash}`);
-  }
-  console.log('Completed diamond cut');
-  return diamond.address;
+  return diamondAddress;
 }
 
 if (require.main == module) {
-  main()
-    .then(() => process.exit(0))
-    .catch(error => {
-      console.error(error);
-      process.exit(1);
-    });
+  main().then(() => process.exit(0));
 }

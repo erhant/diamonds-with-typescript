@@ -1,4 +1,4 @@
-# Contract Playground
+# Diamonds with TypeScript
 
 This is a Hardhat project with several simple contracts and their test in TypeScript. It uses [OpenZeppelin](https://www.openzeppelin.com/) contracts as the base contract most of the time.
 
@@ -6,9 +6,11 @@ Compiled contracts are fed into [TypeChain](https://github.com/dethcrypto/TypeCh
 
 ## Usage
 
+- `yarn` to install the required packages.
 - `yarn compile` to compile the contracts.
 - `yarn test` to test the contracts.
 - `yarn lint` to lint everything.
+- `yarn clean` to clean build artifacts.
 - `yarn node:start` to start a Hardhat node on `localhost`.
 - `yarn node:run <path>` to run a script at the given path on `localhost`.
 
