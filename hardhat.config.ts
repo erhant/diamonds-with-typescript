@@ -6,7 +6,6 @@ import type {HardhatUserConfig} from 'hardhat/types';
 import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
 import '@nomiclabs/hardhat-etherscan';
-import '@nomiclabs/hardhat-solhint';
 import '@nomicfoundation/hardhat-chai-matchers';
 
 const config: HardhatUserConfig = {
@@ -14,13 +13,8 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [{version: '0.8.9', settings: {}}],
   },
-  // redirect typechain output for the frontend
   typechain: {
     outDir: './types/typechain',
-  },
-  networks: {
-    hardhat: {},
-    localhost: {},
   },
 };
 

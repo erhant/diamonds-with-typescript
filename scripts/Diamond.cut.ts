@@ -1,6 +1,12 @@
 import {ethers} from 'hardhat';
 import {IDiamondCut} from '../types/typechain';
 
+/**
+ * Cuts the diamond with the given facet cuts.
+ * @param diamondAddress address of Diamond
+ * @param diamondInitAddress address of DiamondInitFacet
+ * @param facetCuts an array of FacetCutStruct's
+ */
 export async function cutDiamond(
   diamondAddress: string,
   diamondInitAddress: string,

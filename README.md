@@ -1,8 +1,15 @@
 # Diamonds with TypeScript
 
-This is a Hardhat project with several simple contracts and their test in TypeScript. It uses [OpenZeppelin](https://www.openzeppelin.com/) contracts as the base contract most of the time.
+This repository has implementations and tests for [EIP-2535: Diamond Standard](https://eips.ethereum.org/EIPS/eip-2535) in TypeScript. It uses TypeChain and shows a neat way to call facets via casting:
 
-Compiled contracts are fed into [TypeChain](https://github.com/dethcrypto/TypeChain) to generate types, which are then used within TypeScript.
+```typescript
+//    contract variable                         facet name     diamond address     cast to contract type
+const foobarFacet = (await ethers.getContractAt('FoobarFacet', diamondAddress)) as FoobarFacet;
+```
+
+Although you are connected to the `Diamond` contract, the calldata will be formed according to `FoobardFacet` which will cause them to fall into the `fallback` at the diamond, and be routed accordingly.
+
+This repository is complementary to my blog post: ...
 
 ## Usage
 
