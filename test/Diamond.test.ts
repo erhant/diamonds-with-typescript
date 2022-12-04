@@ -3,13 +3,8 @@ import {expect} from 'chai';
 import {ethers} from 'hardhat';
 import constants from '../constants';
 import {cutDiamond} from '../scripts/Diamond.cut';
-import {
-  deployDiamondCutFacet,
-  deployFacet,
-  deployDiamond,
-  deployDiamondInit,
-  FacetCutAction,
-} from '../scripts/Diamond.deploy';
+import {deployDiamondCutFacet, deployFacet, deployDiamond, deployDiamondInit} from '../scripts/Diamond.deploy';
+import {FacetCutAction} from '../types/facetCut';
 import {IDiamondCut, OwnershipFacet} from '../types/typechain';
 import {FoobarFacet} from '../types/typechain/facets/FoobarFacet';
 
@@ -70,36 +65,39 @@ describe('Diamond', async () => {
 
     // cut the diamond to register facets at the diamond
     // test each facet independently from that point on
-    it('should upgrade diamond via DiamondCutFacet', async () => {
+    it('should upgrade Diamond via DiamondCutFacet', async () => {
       await cutDiamond(diamondAddress, diamondInitAddress, facetCuts);
     });
   });
 
-  describe('Ownership facet', async () => {
+  describe('OwnershipFacet', async () => {
     let ownershipFacet: OwnershipFacet;
     before(async () => {
       // sometimes, you dont' even need to cast typechain overloads the getContractAt within hardhat
       ownershipFacet = await ethers.getContractAt('OwnershipFacet', diamondAddress);
     });
 
-    it('should give the correct owner', async () => {
+    it('should have the correct owner', async () => {
       const [owner] = await ethers.getSigners();
       expect(await ownershipFacet.owner()).to.be.eq(owner.address);
     });
   });
 
-  describe('Foobar facet', async () => {
+  describe('FoobarFacet', async () => {
     let foobarFacet: FoobarFacet;
+    let foobarFacetAddress: string;
     before(async () => {
       // you can cast to the connected facet to use its functions
       foobarFacet = (await ethers.getContractAt('FoobarFacet', diamondAddress)) as FoobarFacet;
+      foobarFacetAddress = facetNameToAddress['FoobarFacet'];
     });
 
-    it('should respond to `callMe`', async () => {
-      await expect(foobarFacet.callMe(5)).to.emit(foobarFacet, 'WasCalled').withArgs(owner.address, 5);
+    it('should be able to call `callMe`', async () => {
+      const number = 5;
+      await expect(foobarFacet.callMe(number)).to.emit(foobarFacet, 'WasCalled').withArgs(owner.address, number);
     });
 
-    it('should be able ot call `removeMe`', async () => {
+    it('should be able to call `removeMe`', async () => {
       await expect(foobarFacet.removeMe()).to.revertedWith('FoobarFacet: you should have removed me :)');
     });
 
@@ -126,7 +124,7 @@ describe('Diamond', async () => {
         diamondAddress,
         [
           {
-            facetAddress: facetNameToAddress['FoobarFacet'],
+            facetAddress: foobarFacetAddress,
             action: FacetCutAction.Add,
             functionSelectors: [foobarFacet.interface.getSighash('removeMe()')],
           },
@@ -147,7 +145,7 @@ describe('Diamond', async () => {
         diamondAddress,
         [
           {
-            facetAddress: facetNameToAddress['FoobarFacet'],
+            facetAddress: foobarFacetAddress,
             action: FacetCutAction.Replace,
             functionSelectors: [foobarFacet.interface.getSighash('supportsInterface(bytes4)')],
           },

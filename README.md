@@ -9,7 +9,7 @@ const foobarFacet = (await ethers.getContractAt('FoobarFacet', diamondAddress)) 
 
 Although you are connected to the `Diamond` contract, the calldata will be formed according to `FoobardFacet` which will cause them to fall into the `fallback` at the diamond, and be routed accordingly.
 
-This repository is complementary to my blog post: ...
+This repository is complementary to my blog post: <https://dev.to/erhant/how-to-use-typescript-with-eip-2535-diamonds-3gl6>
 
 ## Usage
 
@@ -25,4 +25,3 @@ This repository is complementary to my blog post: ...
 
 - TypeScript codes are formatted & linted with [GTS](https://github.com/google/gts).
 - Contracts are formatted with [Solidity + Hardhat](https://hardhat.org/hardhat-vscode/docs/formatting).
-- Contracts are linted with [solhint](https://protofire.github.io/solhint).

@@ -1,13 +1,8 @@
 import {ethers} from 'hardhat';
 import constants from '../constants';
+import {FacetCutAction} from '../types/facetCut';
 import {IDiamondCut} from '../types/typechain';
 import {cutDiamond} from './Diamond.cut';
-
-export enum FacetCutAction {
-  Add = 0,
-  Replace = 1,
-  Remove = 2,
-}
 
 /**
  * Deploys a diamond contract.
